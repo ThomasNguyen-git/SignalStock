@@ -1,0 +1,54 @@
+<header>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">Tín hiệu Chứng khoán</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'chart' %}">Biểu đồ</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" data-bs-toggle="dropdown">
+                            Tín hiệu
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'daily_signal' %}">Tín hiệu Daily</a></li>
+                            <li><a class="dropdown-item" href="{% url 'daily_signal' %}">Tín hiệu Hourly</a></li>
+                        </ul>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" data-bs-toggle="dropdown">
+                                Chào mừng {{ user.username }}!
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                {% if user.role == 'admin' %}
+                                    <li><a class="dropdown-item" href="{% url 'admin_panel' %}">Quản lý người dùng</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'daily_management' %}">Quản lý dữ liệu Daily</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'user_info' %}">Thông tin cá nhân</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="{% url 'login' %}" class="nav-link btn btn-outline-primary">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'register' %}" class="nav-link btn btn-outline-success">Đăng ký</a>
+                        </li>
+                    {% endif %}
+                </ul>                    
+            </div>
+        </div>
+    </nav>
+</header>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Data Management</title>
+    <!-- Thêm Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        th, td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .checkbox-column {
+            width: 50px;
+        }
+
+        .filter-dropdown {
+            width: auto;
+            display: inline-block;
+            margin-left: 5px;
+            padding: 3px 5px;
+            font-size: 0.9em;
+            text-align: center; /* Để căn giữa nội dung dropdown */
+        }
+
+        th {
+            position: relative;
+            white-space: nowrap;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        /* Flexbox Layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1; /* Đẩy footer xuống cuối */
+        }
+
+        .d-flex {
+            display: flex;
+            align-items: center;
+        }
+
+        .me-3 {
+            margin-right: 1rem;
+        }
+
+        .form-label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+
+        .form-control-file {
+            display: inline-block;
+            width: auto;
+        }
+
+        .text-muted {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        /* Chỉnh lại lề của cột Volume */
+        td:nth-child(4) {
+            text-align: center; /* Đảm bảo cột Volume được căn giữa */
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Header Section -->
+    {% include 'main_app/header.html' %}
+
+    <div class="container content mt-5">
+        <h1>Quản lý dữ liệu Daily</h1>
+        <form method="POST" enctype="multipart/form-data" class="mb-3">
+            {% csrf_token %}
+            <div class="d-flex align-items-center mb-3">
+                <div class="me-3">
+                    <label for="file-input" class="form-label">Chọn file Excel:</label>
+                    <input type="file" id="file-input" name="excel_file" class="form-control-file">
+                </div>
+                <div class="me-3">
+                    <button type="submit" class="btn btn-primary">Tải Lên</button>
+                    <button id="delete-selected" class="btn btn-danger">Xóa Dữ Liệu Đã Chọn</button>
+                    <button id="delete-all" class="btn btn-warning">Xóa Tất Cả Dữ Liệu</button>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>
+                        Type
+                        <select class="form-control filter-dropdown" data-column="1">
+                            <option value="">Tất cả</option>
+                            {% for sheet_name in unique_sheet_names %}
+                            <option value="{{ sheet_name }}">{{ sheet_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                    <th>
+                        Symbol
+                        <select class="form-control filter-dropdown" data-column="2">
+                            <option value="">Tất cả</option>
+                            {% for symbol in unique_symbols %}
+                            <option value="{{ symbol }}">{{ symbol }}</option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                    <th>
+                        Volume
+                        <select class="form-control filter-dropdown" data-column="3">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </th>
+                    <th>
+                        Signal
+                        <select class="form-control filter-dropdown" data-column="4">
+                            <option value="">Tất cả</option>
+                            {% for signal in unique_signals %}
+                            <option value="{{ signal }}">{{ signal }}</option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                    <th>
+                        Date
+                        <select class="form-control filter-dropdown" data-column="5">
+                            <option value="">Tất cả</option>
+                            {% for date in unique_dates %}
+                            <option value="{{ date|date:"d/m/Y" }}">{{ date|date:"d/m/Y" }}</option>
+                            {% endfor %}
+                        </select>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if datasheets %}
+                    {% for data in datasheets %}
+                        <tr data-id="{{ data.id }}">
+                            <td><input type="checkbox" class="select-row"></td>
+                            <td>{{ data.sheet_name }}</td>
+                            <td>{{ data.symbol }}</td>
+                            <td class="volume-cell" data-volume="{{ data.volume }}">{{ data.volume }}</td>
+                            <td>{{ data.signal }}</td>
+                            <td>{{ data.date|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">Không có dữ liệu nào để hiển thị.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    {% include 'main_app/footer.html' %}
+
+    <!-- Thêm Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.6.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        const filterDropdowns = document.querySelectorAll(".filter-dropdown");
+
+        filterDropdowns.forEach(function(dropdown) {
+            dropdown.addEventListener("change", function() {
+                const column = dropdown.getAttribute("data-column");
+                const filterValue = dropdown.value.toLowerCase();
+                const table = dropdown.closest("table");
+                const rows = table.querySelectorAll("tbody tr");
+
+                rows.forEach(function(row) {
+                    const cell = row.querySelectorAll("td")[column];
+                    if (cell) {
+                        const cellValue = cell.textContent || cell.innerText;
+                        row.style.display = cellValue.toLowerCase().indexOf(filterValue) > -1 || filterValue === "" ? "" : "none";
+                    }
+                });
+            });
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+        const volumeCells = document.querySelectorAll(".volume-cell");
+        
+        volumeCells.forEach(function(cell) {
+            const volume = parseInt(cell.getAttribute('data-volume'), 10);
+            if (!isNaN(volume)) {
+                cell.textContent = volume.toLocaleString('en-US');
+            }
+        });
+    });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        // Xóa dữ liệu đã chọn
+        document.getElementById('delete-selected').addEventListener('click', function() {
+            const selectedRows = document.querySelectorAll('.select-row:checked');
+            const ids = Array.from(selectedRows).map(row => row.closest('tr').getAttribute('data-id'));
+
+            if (ids.length > 0 && confirm('Bạn có chắc chắn muốn xóa các dữ liệu đã chọn?')) {
+                fetch("{% url 'delete_selected_data' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: ids })
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to delete selected data');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
+        // Xóa tất cả dữ liệu
+        document.getElementById('delete-all').addEventListener('click', function() {
+            if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu?')) {
+                fetch("{% url 'delete_all_data' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    }
+                });
+            }
+        });
+
+        // Chọn tất cả checkbox
+        document.getElementById('select-all').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.select-row');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+    });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (nếu sử dụng Bootstrap 4 hoặc cần thêm) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+</body>
+</html>

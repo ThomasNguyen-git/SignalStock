@@ -1,0 +1,49 @@
+<!-- main_app/templates/main_app/edit_user.html -->
+<head>
+    <style>
+        /* Flexbox Layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1; /* Đẩy footer xuống cuối */
+        }
+    </style>
+</head>
+
+{% extends 'main_app/base.html' %}
+
+{% block title %}Sửa Người Dùng{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Sửa Người Dùng</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label">Quyền</label>
+            <select class="form-select" id="role" name="role" required>
+                <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Cập Nhật</button>
+        <a href="{% url 'admin_panel' %}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+{% endblock %}
