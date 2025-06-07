@@ -109,21 +109,19 @@ def daily_management(request):
             file_path = fs.path(filename)
 
             try:
-                # Đọc dữ liệu từ file Excel
-                xls = pd.ExcelFile(file_path)
-                
-                for sheet_name in ['MACD', 'BREAK', 'MA10', 'MA20', 'MA50']:
-                    df = pd.read_excel(xls, sheet_name=sheet_name)
-                    for index, row in df.iterrows():
-                        DataSheet.objects.create(
-                            sheet_name=sheet_name,
-                            symbol=row['symbol'],
-                            volume=row['volume'],
-                            signal=row['signal'],
-                            date=row['date'] if 'date' in row else timezone.now()
-                        )
+                # Đọc dữ liệu từ file Excel và tự động đóng sau khi xử lý
+                with pd.ExcelFile(file_path) as xls:
+                    for sheet_name in ['MACD', 'BREAK', 'MA10', 'MA20', 'MA50']:
+                        df = pd.read_excel(xls, sheet_name=sheet_name)
+                        for index, row in df.iterrows():
+                            DataSheet.objects.create(
+                                sheet_name=sheet_name,
+                                symbol=row['symbol'],
+                                volume=row['volume'],
+                                signal=row['signal'],
+                                date=row['date'] if 'date' in row else timezone.now()
+                            )
             finally:
-                xls.close()
                 fs.delete(filename)
 
             return redirect('daily_management')
